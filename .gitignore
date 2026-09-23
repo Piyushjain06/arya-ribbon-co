@@ -9,9 +9,9 @@ dist/
 build/
 .env
 
-# Data files (large CSVs — optional, remove if you want them tracked)
-# raw_arya_ledger.csv
-# clean_arya_ledger.csv
+# Generated data files
+raw_arya_ledger.csv
+clean_arya_ledger.csv
 
 # Dashboard — Next.js
 dashboard/.next/
