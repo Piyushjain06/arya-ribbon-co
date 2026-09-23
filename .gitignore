@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.env
+
+# Data files (large CSVs — optional, remove if you want them tracked)
+# raw_arya_ledger.csv
+# clean_arya_ledger.csv
+
+# Dashboard — Next.js
+dashboard/.next/
+dashboard/node_modules/
+dashboard/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
