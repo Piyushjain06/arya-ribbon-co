@@ -69,7 +69,7 @@ print(centers)
 # Sort by Monetary descending to assign labels
 centers_sorted = centers.sort_values("Monetary", ascending=False).reset_index(drop=True)
 label_map_keys = centers_sorted["Cluster"].tolist()
-labels = ["Wholesale VIPs", "Loyal Boutiques", "Occasional Buyers", "At-Risk / Churned"]
+labels = ["Wholesale VIPs", "Core Accounts", "Occasional Buyers", "At-Risk / Churned"]
 
 # But also check recency: highest recency (oldest last contact) → At-Risk
 # Refine: among low-monetary clusters, highest recency = At-Risk
@@ -125,7 +125,7 @@ engine.dispose()
 # ─── 6. Visualizations ───────────────────────────────────────────────────────
 PALETTE = {
     "Wholesale VIPs":    "#6C63FF",
-    "Loyal Boutiques":   "#43BF8E",
+    "Core Accounts":     "#43BF8E",
     "Occasional Buyers": "#F5A623",
     "At-Risk / Churned": "#E84393",
 }
@@ -160,7 +160,7 @@ plt.close()
 print("[OK] Saved report_assets/rfm_scatter.png")
 
 # ── 6b. Boxplot: Revenue by Segment ──────────────────────────────────────────
-seg_order = ["Wholesale VIPs", "Loyal Boutiques", "Occasional Buyers", "At-Risk / Churned"]
+seg_order = ["Wholesale VIPs", "Core Accounts", "Occasional Buyers", "At-Risk / Churned"]
 
 fig, ax = plt.subplots(figsize=(11, 6))
 fig.patch.set_facecolor("#0F1117")

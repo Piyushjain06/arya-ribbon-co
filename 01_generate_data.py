@@ -138,13 +138,33 @@ for i in range(1, 4001):
         qty = int(np.random.lognormal(mean=4.5, sigma=1.2))
         qty = max(1, min(qty, 5000))  # cap sanity
 
+    # Payment Status: 'Paid' (60%), 'Pending' (20%), 'Overdue' (20%)
+    status_roll = random.random()
+    if status_roll < 0.60:
+        payment_status = "Paid"
+    elif status_roll < 0.80:
+        payment_status = "Pending"
+    else:
+        payment_status = "Overdue"
+
+    # Payment Method logic
+    if payment_status in ("Pending", "Overdue"):
+        payment_method = None
+    else:
+        if qty > 500:
+            payment_method = random.choice(["Bank Transfer (NEFT)", "Cheque"])
+        else:
+            payment_method = random.choice(["UPI", "Cash", "Bank Transfer (NEFT)"])
+
     records.append({
-        "Invoice_ID":    f"INV-{i:04d}",
-        "Date":          date.strftime("%Y-%m-%d"),
-        "Client":        client,
-        "Product":       product,
-        "Quantity":      qty,
+        "Invoice_ID":     f"INV-{i:04d}",
+        "Date":           date.strftime("%Y-%m-%d"),
+        "Client":         client,
+        "Product":        product,
+        "Quantity":       qty,
         "Unit_Price_INR": unit_price,
+        "Payment_Status": payment_status,
+        "Payment_Method": payment_method,
     })
 
 df = pd.DataFrame(records)

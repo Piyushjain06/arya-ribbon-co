@@ -22,7 +22,7 @@ interface Props {
 
 const COLORS: Record<string, string> = {
   'Wholesale VIPs':    '#6C63FF',
-  'Loyal Boutiques':   '#43BF8E',
+  'Core Accounts':     '#43BF8E',
   'Occasional Buyers': '#F5A623',
   'At-Risk / Churned': '#E84393',
 };

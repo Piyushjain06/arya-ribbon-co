@@ -3,6 +3,7 @@ import { formatINRCompact } from '@/lib/format';
 import KpiCard from '@/components/KpiCard';
 import SegmentDonut from '@/components/SegmentDonut';
 import AtRiskTable from '@/components/AtRiskTable';
+import DefaultersTable from '@/components/DefaultersTable';
 import RevenueBar from '@/components/RevenueBar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -23,6 +24,16 @@ interface AtRiskRow {
 interface SummaryRow {
   total_clients: string;
   total_revenue: string;
+}
+
+interface OutstandingRow {
+  outstanding_dues: string;
+}
+
+interface DefaulterRow {
+  client: string;
+  unpaid_dues: string;
+  unpaid_invoices: string;
 }
 
 // Force dynamic rendering — no caching for live DB data
@@ -59,6 +70,23 @@ export default async function DashboardPage() {
     LIMIT 10
   `);
 
+  // Query A: Outstanding KPI (sum of total_amount_inr where payment_status IN ('Pending', 'Overdue'))
+  const [outstandingResult] = await query<OutstandingRow>(`
+    SELECT COALESCE(SUM(total_amount_inr), 0)::text AS outstanding_dues
+    FROM invoice_ledger
+    WHERE payment_status IN ('Pending', 'Overdue')
+  `);
+
+  // Query B: Defaulters List (top 10 defaulters)
+  const defaulterRows = await query<DefaulterRow>(`
+    SELECT client, SUM(total_amount_inr) AS unpaid_dues, COUNT(invoice_id) AS unpaid_invoices
+    FROM invoice_ledger
+    WHERE payment_status IN ('Pending', 'Overdue')
+    GROUP BY client
+    ORDER BY unpaid_dues DESC
+    LIMIT 10;
+  `);
+
   // ─── Derived values ─────────────────────────────────────────────────────────
   const segmentData = segmentRows.map((r) => ({
     segment: r.segment,
@@ -68,6 +96,7 @@ export default async function DashboardPage() {
 
   const totalClients = parseInt(summary?.total_clients ?? '0', 10);
   const totalRevenue = parseFloat(summary?.total_revenue ?? '0');
+  const outstandingDues = parseFloat(outstandingResult?.outstanding_dues ?? '0');
 
   const atRiskClients = atRiskRows.map((r) => ({
     client:    r.client,
@@ -75,6 +104,12 @@ export default async function DashboardPage() {
     frequency: r.frequency,
     monetary:  parseFloat(r.monetary),
     segment:   r.segment,
+  }));
+
+  const defaulters = defaulterRows.map((r) => ({
+    client:          r.client,
+    unpaid_dues:     parseFloat(r.unpaid_dues),
+    unpaid_invoices: parseInt(r.unpaid_invoices, 10),
   }));
 
   return (
@@ -89,6 +124,11 @@ export default async function DashboardPage() {
               alt="Arya Ribbon Company Logo"
               className="h-12 w-auto object-contain"
             />
+            <div>
+              <span className="text-xl font-extrabold tracking-tight text-white leading-tight">
+                Arya Ribbon Company
+              </span>
+            </div>
           </div>
 
         </div>
@@ -99,7 +139,7 @@ export default async function DashboardPage() {
         {/* ─── KPI Cards ──────────────────────────────────────────────────────── */}
         <section>
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Key Metrics</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <KpiCard
               title="Total Clients"
               value={totalClients}
@@ -115,6 +155,15 @@ export default async function DashboardPage() {
               subtitle="Lifetime monetary value"
               icon="💰"
               gradient="bg-gradient-to-br from-emerald-500 to-teal-700"
+            />
+            <KpiCard
+              title="Outstanding Dues"
+              value={Math.round(outstandingDues)}
+              prefix=""
+              formattedValue={formatINRCompact(outstandingDues)}
+              subtitle="Pending & overdue dues"
+              icon="⚠️"
+              gradient="bg-gradient-to-br from-rose-600 to-red-800"
             />
             <KpiCard
               title="Wholesale VIPs"
@@ -148,7 +197,7 @@ export default async function DashboardPage() {
             {segmentData.map((seg) => {
               const colorMap: Record<string, { bg: string; text: string; border: string }> = {
                 'Wholesale VIPs':    { bg: 'bg-violet-500/10', text: 'text-violet-300', border: 'border-violet-500/20' },
-                'Loyal Boutiques':   { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/20' },
+                'Core Accounts':     { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/20' },
                 'Occasional Buyers': { bg: 'bg-amber-500/10', text: 'text-amber-300', border: 'border-amber-500/20' },
                 'At-Risk / Churned': { bg: 'bg-pink-500/10', text: 'text-pink-300', border: 'border-pink-500/20' },
               };
@@ -166,10 +215,16 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* ─── At-Risk Table ──────────────────────────────────────────────────── */}
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Sales Priority</p>
-          <AtRiskTable clients={atRiskClients} />
+        {/* ─── Tables Section ─────────────────────────────────────────────────── */}
+        <section className="space-y-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Sales Priority</p>
+            <AtRiskTable clients={atRiskClients} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Financial Risk</p>
+            <DefaultersTable defaulters={defaulters} />
+          </div>
         </section>
 
         {/* ─── Footer ─────────────────────────────────────────────────────────── */}

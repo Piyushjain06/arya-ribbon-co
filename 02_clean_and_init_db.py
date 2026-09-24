@@ -32,6 +32,10 @@ print(f"After filtering negatives: {len(df)} rows")
 # Calculate Total Amount
 df["Total_Amount_INR"] = (df["Quantity"] * df["Unit_Price_INR"]).round(2)
 
+# Fill null values in Payment_Method with 'Not Applicable'
+if "Payment_Method" in df.columns:
+    df["Payment_Method"] = df["Payment_Method"].fillna("Not Applicable")
+
 # ─── 3. Winsorize top 1% of Total_Amount_INR ─────────────────────────────────
 cap_val = df["Total_Amount_INR"].quantile(0.99)
 df["Total_Amount_INR"] = df["Total_Amount_INR"].clip(upper=cap_val)
